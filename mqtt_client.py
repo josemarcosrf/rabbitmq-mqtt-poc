@@ -68,7 +68,7 @@ def _init_client(transport:str, nginx:bool):
     return client
 
 
-def pub(payload:str, transport:str = TRANSPORT_WS, nginx:bool = False):
+def pub(topic:str, payload:str, transport:str = TRANSPORT_WS, nginx:bool = False):
     """This method is analogous to LINT-backend, publishing document processing updates.
 
     Equivalent to:
@@ -85,13 +85,17 @@ def pub(payload:str, transport:str = TRANSPORT_WS, nginx:bool = False):
     But 'single' doesn't allow to specify a non-default path
     """
     client = _init_client(transport, nginx)
-    pprint(f"📨 Publishing to ${TOPIC}/hello -> {payload} 📨")
-    client.publish(f"${TOPIC}/hello", payload)
+    pprint(f"📨 Publishing to {topic} -> {payload} 📨")
+    client.publish(f"{topic}", payload)
 
 
-def sub(transport:str = TRANSPORT_WS, nginx:bool = False):
+def sub(topic: str, transport:str = TRANSPORT_WS, nginx:bool = False):
     """This method is analogous to the LINT-frontend which subsribes to updates"""
     client = _init_client(transport, nginx)
+    client.subscribe(f"{topic}")
+    pprint(f"🔔 Subscribed to {topic}");
+    
+    client.on_message = on_message
 
     # Blocking call that processes network traffic, dispatches callbacks and
     # handles reconnecting.
