@@ -16,30 +16,30 @@ Small PoC to test rabbitmq as MQTT broker
 
 3. Run the Subscriber:
     ```bash
-    # WEBSOCKETS without nginx
-    python mqtt_client.py sub
-    
     # TCP without nginx
-    python mqtt_client.py sub -t tcp
-    
-    # WEBSOCKETS through nginx
-    python mqtt_client.py sub -n
-    
+    python mqtt_client.py sub COOL-TOPIC
+
     # TCP through nginx
-    python mqtt_client.py sub -t tcp -n
+    python mqtt_client.py sub COOL-TOPIC -n
+    
+    # WEBSOCKETS without nginx
+    python mqtt_client.py sub COOL-TOPIC -w
+
+    # WEBSOCKETS through nginx
+    python mqtt_client.py sub COOL-TOPIC -w -n
     ```
 
 4. Run the publisher:
     ```bash
-    # WEBSOCKETS without nginx
-    python mqtt_client.py pub yaaaay
-    
     # TCP without nginx
-    python mqtt_client.py pub yaaaay -t tcp
-    
-    # WEBSOCKETS through nginx
-    python mqtt_client.py pub yaaaay  -n
-    
+    python mqtt_client.py pub COOL-TOPIC hello-message
+
     # TCP through nginx
-    python mqtt_client.py pub yaaaay -t tcp -n
+    python mqtt_client.py pub COOL-TOPIC hello-message -n
+
+    # WEBSOCKETS without nginx
+    python mqtt_client.py pub COOL-TOPIC hello-message -w
+
+    # WEBSOCKETS through nginx
+    python mqtt_client.py pub COOL-TOPIC hello-message -w -n
     ```
