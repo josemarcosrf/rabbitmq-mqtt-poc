@@ -15,8 +15,8 @@ services:
     container_name: nginx
     restart: always
     ports:
-      - "80:80"        # MQTT over unencrypted TCP
-      - "8888:8888"    # MQTT over unencrypted WebSockets
+      - "80:80"        # MQTT over unencrypted WebSockets
+      - "8888:8888"    # MQTT over unencrypted TCP
       - "443:443"      # MQTT over encrypted TCP/WebSockets ??
     volumes:
       - ./nginx:/etc/nginx/conf.d
