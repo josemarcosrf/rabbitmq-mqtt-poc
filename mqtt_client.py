@@ -81,7 +81,9 @@ def _init_client(host: str, websockets: bool, nginx: bool, ssl: bool):
         client.ws_set_options(path="/ws")
     if ssl:
         # https://github.com/eclipse/paho.mqtt.python/blob/master/examples/client_sub_opts.py
-        pass
+        client.tls_set()
+        client.tls_insecure_set(True) # self-signed cert
+
 
     pprint(f"🔌 Connecting with MQTT over {transport.upper()} @ {host}:{port}")
     client.connect(host, port, 60)
