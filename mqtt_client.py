@@ -160,11 +160,14 @@ def amqpub(topic: str, payload: str = "Hello, RabbitMQ!", host: str = HOST):
     connection = pika.BlockingConnection(pika.ConnectionParameters(host))
     channel = connection.channel()
 
-    # Declare a topic exchange named 'my_topic_exchange'
+    # Declare a topic exchange (could skip this as we are using a rabbitmq existing)
     channel.exchange_declare(exchange=EXCHANGE, exchange_type="topic", passive=True)
 
     # Publish the message to the exchange with the specified routing key
     channel.basic_publish(exchange=EXCHANGE, routing_key=topic, body=payload)
+
+    # Close the connection
+    connection.close()
 
 
 if __name__ == "__main__":
