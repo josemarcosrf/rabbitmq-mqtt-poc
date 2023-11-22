@@ -171,10 +171,13 @@ def amqpub(topic: str, payload: str = "Hello, RabbitMQ!", host: str = HOST):
 
 
 if __name__ == "__main__":
-    Fire(
-        {
-            "sub": sub,
-            "pub": pub,
-            "amqpub": amqpub,
-        }
-    )
+    try:
+        Fire(
+            {
+                "sub": sub,
+                "pub": pub,
+                "amqpub": amqpub,
+            }
+        )
+    except Exception as e:
+        pprint(f"💥 [red]Error: {e}[/red]")
