@@ -3,7 +3,7 @@ from fire import Fire
 from rich import print as pprint
 
 TOPIC = "LINT"
-HOST = "localhost"  # ec2-35-158-251-167.eu-central-1.compute.amazonaws.com
+HOST = "localhost"  # jose.devbox.melior.ai
 
 # rabbitmq defined ports (un-encrypted)
 MQTT_PORT = 1883
@@ -99,7 +99,14 @@ def sub(
     proxied: bool = False,
     ssl: bool = False,
 ):
-    """This method is analogous to the LINT-frontend which subsribes to updates"""
+    """This method is analogous to the LINT-frontend which subsribes to updates
+    using rabbitMQ's web-mqtt plugin (or mqtt over websockets)
+
+    Example usage:
+    ```
+    python scripts/mqtt_client.py sub TEST -s -w -p -h jose.devbox.melior.ai
+    ```
+    """
     client = _init_client(host, websockets, proxied, ssl)
 
     # Set the global TOPIC to what we received so we get
@@ -122,19 +129,29 @@ def sub(
 
 def pub(
     topic: str,
-    payload: str,
+    message: str,
     host: str = HOST,
     websockets: bool = False,
     proxied: bool = False,
     ssl: bool = False,
 ):
-    """This method is analogous to LINT-backend, publishing document processing updates.
+    """This method is analogous to LINT-backend, publishing document processing updates
+    if are to be published through using MQTT protocol.
 
-    Equivalent to:
+    Usage example:
+    ```
+    python scripts/mqtt_client.py pub TEST hey-there \
+        --host jose.devbox.melior.ai
+        --proxied \
+        --websockets \ 
+        --ssl
+    ```
+
+    Note that this is equivalent to:
     ```
     publish.single(
         f"${TOPIC}/hello",
-        payload,
+        message,
         hostname=HOST,
         port=port,
         transport=TRANSPORT_WS if websockets else TRANSPORT_TCP
@@ -144,15 +161,16 @@ def pub(
     But 'single' doesn't allow to specify a non-default path
     """
     client = _init_client(host, websockets, proxied, ssl)
-    pprint(f"📨 Publishing to {topic} -> {payload} 📨")
-    client.publish(topic, payload)
+    pprint(f"📨 Publishing to {topic} -> {message} 📨")
+    client.publish(topic, message)
     client.disconnect()
 
 
-def amqpub(topic: str, payload: str = "Hello, RabbitMQ!", host: str = HOST):
-    """This method skips all along the mqtt protocol and paho library
-    by publishing directly to the exchange that rabbitMQ uses to route
-    messages used with the mqtt protocol
+def amqpub(topic: str, message: str = "Hello, RabbitMQ!", host: str = HOST):
+    """This method is analogous to LINT-backend, publishing document processing updates
+    if are to be published through using AMQP protocol, skipping all along the mqtt
+    protocol and paho library by publishing directly to the exchange that rabbitMQ
+    uses to route messages used with the mqtt protocol.
     """
     import pika
 
@@ -167,7 +185,7 @@ def amqpub(topic: str, payload: str = "Hello, RabbitMQ!", host: str = HOST):
     channel.exchange_declare(exchange=EXCHANGE, exchange_type="topic", passive=True)
 
     # Publish the message to the exchange with the specified routing key
-    channel.basic_publish(exchange=EXCHANGE, routing_key=topic, body=payload)
+    channel.basic_publish(exchange=EXCHANGE, routing_key=topic, body=message)
 
     # Close the connection
     connection.close()
