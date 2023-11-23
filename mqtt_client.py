@@ -48,8 +48,8 @@ def on_message(client, userdata, msg):
     pprint(f"📬️ Received @ {msg.topic}: {msg.payload}")
 
 
-def _get_port(transport: str, nginx: bool, ssl: bool):
-    if nginx:
+def _get_port(transport: str, proxied: bool, ssl: bool):
+    if proxied:
         if ssl:
             # SSL only through nginx
             # (we drop tls and use plain connections thereafter)
@@ -59,13 +59,15 @@ def _get_port(transport: str, nginx: bool, ssl: bool):
         return NGINX_WEB_MQTT_PORT if transport == TRANSPORT_WS else NGINX_MQTT_PORT
 
     if ssl:
-        raise ValueError("'SSL' option can only be used in conjuntion with 'nginx'")
+        raise ValueError(
+            "'SSL' option (-s) can only be used in conjuntion with 'proxied' (-p)"
+        )
 
     # TCP (raw mqtt) or WebSockets port directly to rabbitMQ
     return WEB_MQTT_PORT if transport == TRANSPORT_WS else MQTT_PORT
 
 
-def _init_client(host: str, websockets: bool, nginx: bool, ssl: bool):
+def _init_client(host: str, websockets: bool, proxied: bool, ssl: bool):
     transport = TRANSPORT_WS if websockets else TRANSPORT_TCP
     client = mqtt.Client(transport=transport)
 
@@ -76,14 +78,13 @@ def _init_client(host: str, websockets: bool, nginx: bool, ssl: bool):
     # IMPORTANT:
     # By default the Web MQTT plugin exposes a WebSocket endpoint
     # on port 15675 and ** path /ws **
-    port = _get_port(transport, nginx, ssl)
+    port = _get_port(transport, proxied, ssl)
     if transport == TRANSPORT_WS:
         client.ws_set_options(path="/ws")
     if ssl:
         # https://github.com/eclipse/paho.mqtt.python/blob/master/examples/client_sub_opts.py
         client.tls_set()
-        client.tls_insecure_set(True) # self-signed cert
-
+        client.tls_insecure_set(True)  # self-signed cert
 
     pprint(f"🔌 Connecting with MQTT over {transport.upper()} @ {host}:{port}")
     client.connect(host, port, 60)
@@ -95,11 +96,11 @@ def sub(
     topic: str,
     host: str = HOST,
     websockets: bool = False,
-    nginx: bool = False,
+    proxied: bool = False,
     ssl: bool = False,
 ):
     """This method is analogous to the LINT-frontend which subsribes to updates"""
-    client = _init_client(host, websockets, nginx, ssl)
+    client = _init_client(host, websockets, proxied, ssl)
 
     # Set the global TOPIC to what we received so we get
     # subscription renewal. In practive this would be a class
@@ -124,7 +125,7 @@ def pub(
     payload: str,
     host: str = HOST,
     websockets: bool = False,
-    nginx: bool = False,
+    proxied: bool = False,
     ssl: bool = False,
 ):
     """This method is analogous to LINT-backend, publishing document processing updates.
@@ -142,7 +143,7 @@ def pub(
 
     But 'single' doesn't allow to specify a non-default path
     """
-    client = _init_client(host, websockets, nginx, ssl)
+    client = _init_client(host, websockets, proxied, ssl)
     pprint(f"📨 Publishing to {topic} -> {payload} 📨")
     client.publish(topic, payload)
     client.disconnect()
